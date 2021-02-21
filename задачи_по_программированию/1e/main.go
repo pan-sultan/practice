@@ -30,22 +30,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("%v %v\n", a, n)
+	fmt.Printf("a = %v, n = %v\n", a, n)
 
+	runPow(a, n, powSTD)
+	runPow(a, n, powSimple)
+	runPow(a, n, pow2)
+	runPow(a, n, powSmart)
+}
+
+func runPow(a, n uint64, pow func(uint64, uint64) uint64) {
 	start := time.Now()
-	res := uint64(math.Pow(float64(a), float64(n)))
+	res := pow(a, n)
 	duration := time.Since(start)
 	fmt.Printf("time %v, res = %v\n", duration, res)
+}
 
-	start = time.Now()
-	res = powSimple(a, n)
-	duration = time.Since(start)
-	fmt.Printf("time %v, res = %v\n", duration, res)
-
-	start = time.Now()
-	res = pow2(a, n)
-	duration = time.Since(start)
-	fmt.Printf("time %v, res = %v\n", duration, res)
+func powSTD(a, n uint64) uint64 {
+	return uint64(math.Pow(float64(a), float64(n)))
 }
 
 func powSimple(a, n uint64) (res uint64) {
@@ -56,19 +57,39 @@ func powSimple(a, n uint64) (res uint64) {
 	return
 }
 
-func pow2(a, n uint64) (res uint64) {
+func powSmart(a, n uint64) (res uint64) {
 	if n == 1 || a == 1 {
 		return a
 	}
 
 	more := n % 2
+
 	a2 := a * a
 	if n == 2 {
 		return a2
 	}
 
+	res = powSmart(a2, n/2)
+
+	if more == 1 {
+		res *= a
+	}
+	return
+}
+
+func pow2(a, n uint64) uint64 {
+	if n == 1 || a == 1 {
+		return a
+	}
+
+	a2 := a * a
+	if n == 2 {
+		return a2
+	}
+
+	more := n % 2
 	n = n / 2
-	res = a2
+	res := a2
 	for n--; n != 0; n-- {
 		res *= a2
 	}
@@ -77,7 +98,7 @@ func pow2(a, n uint64) (res uint64) {
 		res *= a
 	}
 
-	return
+	return res
 }
 
 func usage() {

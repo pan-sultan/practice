@@ -4,8 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	utils "practice/задачи_по_программированию"
+	"time"
 )
 
 /*
@@ -29,14 +31,52 @@ func main() {
 	}
 
 	fmt.Printf("%v %v\n", a, n)
-	fmt.Println(pow(a, n))
+
+	start := time.Now()
+	res := uint64(math.Pow(float64(a), float64(n)))
+	duration := time.Since(start)
+	fmt.Printf("time %v, res = %v\n", duration, res)
+
+	start = time.Now()
+	res = powSimple(a, n)
+	duration = time.Since(start)
+	fmt.Printf("time %v, res = %v\n", duration, res)
+
+	start = time.Now()
+	res = pow2(a, n)
+	duration = time.Since(start)
+	fmt.Printf("time %v, res = %v\n", duration, res)
 }
 
-func pow(a, n uint64) (res uint64) {
+func powSimple(a, n uint64) (res uint64) {
 	res = a
 	for n--; n != 0; n-- {
 		res *= a
 	}
+	return
+}
+
+func pow2(a, n uint64) (res uint64) {
+	if n == 1 || a == 1 {
+		return a
+	}
+
+	more := n % 2
+	a2 := a * a
+	if n == 2 {
+		return a2
+	}
+
+	n = n / 2
+	res = a2
+	for n--; n != 0; n-- {
+		res *= a2
+	}
+
+	if more == 1 {
+		res *= a
+	}
+
 	return
 }
 

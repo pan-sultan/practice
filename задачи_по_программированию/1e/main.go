@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math"
+	"math/big"
 	"os"
 	utils "practice/задачи_по_программированию"
 	"time"
@@ -15,6 +15,14 @@ import (
 1 <= a <= 9
 1 <= n <= 7000
 */
+
+var one *big.Int
+
+func init() {
+	one = new(big.Int)
+	one.SetUint64(1)
+}
+
 func main() {
 	if len(os.Args) != 3 {
 		usage()
@@ -32,70 +40,77 @@ func main() {
 
 	fmt.Printf("a = %v, n = %v\n", a, n)
 
-	runPow(a, n, powSTD)
 	runPow(a, n, powSimple)
 	runPow(a, n, pow2)
 	runPow(a, n, powSmart)
 }
 
-func runPow(a, n uint64, pow func(uint64, uint64) uint64) {
+func runPow(a *big.Int, n uint64, pow func(*big.Int, uint64) *big.Int) {
 	start := time.Now()
 	res := pow(a, n)
 	duration := time.Since(start)
 	fmt.Printf("time %v, res = %v\n", duration, res)
 }
 
-func powSTD(a, n uint64) uint64 {
-	return uint64(math.Pow(float64(a), float64(n)))
-}
-
-func powSimple(a, n uint64) (res uint64) {
-	res = a
+func powSimple(a *big.Int, n uint64) (res *big.Int) {
+	res = new(big.Int)
+	res.Set(a)
 	for n--; n != 0; n-- {
-		res *= a
+		res = res.Mul(res, a)
 	}
 	return
 }
 
-func powSmart(a, n uint64) (res uint64) {
-	if n == 1 || a == 1 {
-		return a
+func powSmart(a *big.Int, n uint64) *big.Int {
+	var calc func(a big.Int, n uint64) big.Int
+
+	calc = func(a big.Int, n uint64) (res big.Int) {
+		if n == 1 || a.Cmp(one) == 0 {
+			return a
+		}
+
+		more := n % 2
+		var a2 big.Int
+		a2.Set(&a)
+		a2 = *a2.Mul(&a2, &a)
+		if n == 2 {
+			return a2
+		}
+
+		res = calc(a2, n/2)
+
+		if more == 1 {
+			res = *res.Mul(&res, &a)
+		}
+		return res
 	}
 
-	more := n % 2
-
-	a2 := a * a
-	if n == 2 {
-		return a2
-	}
-
-	res = powSmart(a2, n/2)
-
-	if more == 1 {
-		res *= a
-	}
-	return
+	res := calc(*a, n)
+	return &res
 }
 
-func pow2(a, n uint64) uint64 {
-	if n == 1 || a == 1 {
+func pow2(a *big.Int, n uint64) *big.Int {
+	if n == 1 || a.Cmp(one) == 0 {
 		return a
 	}
 
-	a2 := a * a
+	a2 := new(big.Int)
+	a2.Set(a)
+	a2 = a2.Mul(a2, a)
 	if n == 2 {
 		return a2
 	}
 
 	more := n % 2
 	n = n / 2
-	res := a2
+	res := new(big.Int)
+	res.Set(a2)
 	for n--; n != 0; n-- {
-		res *= a2
+		res = res.Mul(res, a2)
 	}
 
 	if more == 1 {
-		res *= a
+		res = res.Mul(res, a)
 	}
 
 	return res
@@ -105,18 +120,24 @@ func usage() {
 	fmt.Printf("%s <число> <степень>\n", os.Args[0])
 }
 
-func input() (a uint64, n uint64, err error) {
-	a, err = utils.Str2uint64(os.Args[1])
+func input() (*big.Int, uint64, error) {
+	a, err := utils.Str2uint64(os.Args[1])
 	if err != nil {
-		return
+		return nil, 0, err
 	}
 
-	n, err = utils.Str2uint64(os.Args[2])
-	return
+	n, err := utils.Str2uint64(os.Args[2])
+	if err != nil {
+		return nil, 0, err
+	}
+
+	ba := new(big.Int)
+	ba.SetUint64(a)
+	return ba, n, nil
 }
 
-func validate(a uint64, n uint64) error {
-	if a < 1 || a > 9 {
+func validate(a *big.Int, n uint64) error {
+	if a.Uint64() < 1 || a.Uint64() > 9 {
 		return errors.New("число должно быть в дипазоне [1; 9]")
 	}
 

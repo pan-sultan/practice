@@ -12,6 +12,7 @@ import (
 
 /*
 Задача 1 Е. Степень
+Вычислить степень (n) числа (a):
 1 <= a <= 9
 1 <= n <= 7000
 */
@@ -42,6 +43,7 @@ func main() {
 
 	runPow(a, n, powSimple)
 	runPow(a, n, pow2)
+	runPow(a, n, powSmartRec)
 	runPow(a, n, powSmart)
 }
 
@@ -61,7 +63,7 @@ func powSimple(a *big.Int, n uint64) (res *big.Int) {
 	return
 }
 
-func powSmart(a *big.Int, n uint64) *big.Int {
+func powSmartRec(a *big.Int, n uint64) *big.Int {
 	var calc func(a big.Int, n uint64) big.Int
 
 	calc = func(a big.Int, n uint64) (res big.Int) {
@@ -87,6 +89,31 @@ func powSmart(a *big.Int, n uint64) *big.Int {
 
 	res := calc(*a, n)
 	return &res
+}
+
+func powSmart(a *big.Int, n uint64) *big.Int {
+	if n == 1 || a.Cmp(one) == 0 {
+		return a
+	}
+
+	pows := make([]*big.Int, 0, 10)
+	res := new(big.Int)
+	res.Set(a)
+
+	for ; n > 1; n /= 2 {
+		if (n % 2) == 1 {
+			tmp := new(big.Int)
+			tmp.Set(res)
+			pows = append(pows, tmp)
+		}
+		res = res.Mul(res, res)
+	}
+
+	for _, p := range pows {
+		res = res.Mul(res, p)
+	}
+
+	return res
 }
 
 func pow2(a *big.Int, n uint64) *big.Int {
